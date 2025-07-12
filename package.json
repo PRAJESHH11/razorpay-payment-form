@@ -4,14 +4,14 @@
   "description": "MERN Stack Payment Gateway with Razorpay Integration",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
-    "start": "cd backend && npm install && npm start",
-    "dev": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\""
+    "start": "cd backend && npm install && npm start"
   },
   "engines": {
     "node": "18.x"
   },
-  "dependencies": {},
-  "keywords": ["mern", "razorpay", "payment", "gateway"],
-  "author": "Prajesh Parekh",
+  "dependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "author": "Your Name",
   "license": "MIT"
 }

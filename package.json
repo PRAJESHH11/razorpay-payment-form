@@ -1,0 +1,13 @@
+{
+  "name": "razorpay-mern-app",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "cd backend && npm install && npm start",
+    "dev": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\""
+  },
+  "dependencies": {},
+  "engines": {
+    "node": "18.x"
+  }
+}

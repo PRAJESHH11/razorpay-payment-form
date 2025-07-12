@@ -63,11 +63,11 @@ app.post('/api/create-order', async (req, res) => {
       payment_capture: 1, // Auto capture payment
     };
 
-    console.log('🎯 Creating Razorpay order with options:', options);
+    console.log(' Creating Razorpay order with options:', options);
     
     const order = await razorpay.orders.create(options);
     
-    console.log('✅ Razorpay order created:', order);
+    console.log(' Razorpay order created:', order);
 
     // Return order details to frontend
     res.json({
@@ -79,7 +79,7 @@ app.post('/api/create-order', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error creating order:', error);
+    console.error(' Error creating order:', error);
     res.status(500).json({ 
       error: 'Failed to create order',
       details: error.message,
@@ -91,7 +91,7 @@ app.post('/api/create-order', async (req, res) => {
 // Verify payment
 app.post('/api/verify-payment', async (req, res) => {
   try {
-    console.log('🔍 Verifying payment:', req.body);
+    console.log(' Verifying payment:', req.body);
     
     const { 
       razorpay_order_id, 
@@ -104,7 +104,7 @@ app.post('/api/verify-payment', async (req, res) => {
     // For now, just return success
     // In production, add proper signature verification
     
-    console.log('✅ Payment verified successfully');
+    console.log(' Payment verified successfully');
     
     // Save payment details to database here if needed
     
@@ -116,7 +116,7 @@ app.post('/api/verify-payment', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error verifying payment:', error);
+    console.error(' Error verifying payment:', error);
     res.status(500).json({ 
       success: false,
       error: 'Payment verification failed',
@@ -140,7 +140,7 @@ app.get('/api/test', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err);
+  console.error(' Unhandled error:', err);
   res.status(500).json({ 
     error: 'Internal server error',
     message: err.message
@@ -157,13 +157,25 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🧪 Test endpoint: http://localhost:${PORT}/api/test`);
+  console.log(` Server running on port ${PORT}`);
+  console.log(` Health check: http://localhost:${PORT}/api/health`);
+  console.log(` Test endpoint: http://localhost:${PORT}/api/test`);
   
   // Log environment status
-  console.log('\n📋 Environment Status:');
-  console.log('✅ MongoDB URI:', !!process.env.MONGODB_URI);
-  console.log('✅ Razorpay Key ID:', !!process.env.RAZORPAY_KEY_ID);
-  console.log('✅ Razorpay Secret:', !!process.env.RAZORPAY_KEY_SECRET);
+  console.log('\n Environment Status:');
+  console.log(' MongoDB URI:', !!process.env.MONGODB_URI);
+  console.log(' Razorpay Key ID:', !!process.env.RAZORPAY_KEY_ID);
+  console.log(' Razorpay Secret:', !!process.env.RAZORPAY_KEY_SECRET);
+});
+
+
+// Add this after your other middleware in server.js
+const path = require('path');
+
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });

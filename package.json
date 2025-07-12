@@ -1,13 +1,17 @@
 {
-  "name": "razorpay-mern-app",
+  "name": "razorpay-mern-payment-gateway",
   "version": "1.0.0",
+  "description": "MERN Stack Payment Gateway with Razorpay Integration",
   "scripts": {
     "build": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm install && npm start",
     "dev": "concurrently \"cd backend && npm start\" \"cd frontend && npm start\""
   },
-  "dependencies": {},
   "engines": {
     "node": "18.x"
-  }
+  },
+  "dependencies": {},
+  "keywords": ["mern", "razorpay", "payment", "gateway"],
+  "author": "Your Name",
+  "license": "MIT"
 }

@@ -29,8 +29,8 @@ git clone https://github.com/YOUR_USERNAME/razorpay-mern-payment-gateway.git
 cd razorpay-mern-payment-gateway
 
 # Backend setup
-cd backend
-npm install
+- cd backend  
+- npm install
 
 # Frontend setup
 cd ../frontend

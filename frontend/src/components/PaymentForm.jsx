@@ -1,11 +1,15 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import AmountSelector from './AmountSelector'
 import TipSection from './TipSection'
 import FormFields from './FormFields'
 import { validateForm } from '../utils/validation'
 import { createOrder, verifyPayment } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
-const PaymentForm = () => {
+// CHANGED: Added props parameter to accept onPaymentSuccess callback
+const PaymentForm = (props) => {
+  const { user } = useAuth()
+
   const [selectedAmount, setSelectedAmount] = useState(2500)
   const [customAmount, setCustomAmount] = useState('')
   const [tipPercentage, setTipPercentage] = useState(18)
@@ -19,6 +23,18 @@ const PaymentForm = () => {
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
+  // Pre-fill form with user data when component mounts or user changes
+  useEffect(() => {
+    if (user && !formData.anonymous) {
+      console.log('Pre-filling form with user data:', user.fullName, user.email)
+      setFormData(prev => ({
+        ...prev,
+        name: user.fullName || '',
+        email: user.email || ''
+      }))
+    }
+  }, [user, formData.anonymous])
+
   const contributionAmount = selectedAmount === 'other' ? parseInt(customAmount) || 0 : selectedAmount
   const tipAmount = Math.round((contributionAmount * tipPercentage) / 100)
   const totalAmount = contributionAmount + tipAmount
@@ -28,6 +44,26 @@ const PaymentForm = () => {
       ...prev,
       [field]: value
     }))
+
+    if (field === 'anonymous') {
+      if (value && user) {
+        console.log('Switching to anonymous mode - clearing user data from form')
+        setFormData(prev => ({
+          ...prev,
+          name: '',
+          email: '',
+          anonymous: true
+        }))
+      } else if (!value && user) {
+        console.log('Switching from anonymous mode - restoring user data')
+        setFormData(prev => ({
+          ...prev,
+          name: user.fullName || '',
+          email: user.email || '',
+          anonymous: false
+        }))
+      }
+    }
 
     if (errors[field]) {
       setErrors(prev => ({
@@ -61,6 +97,7 @@ const PaymentForm = () => {
 
   const handlePayment = async () => {
     console.log('Starting payment process...')
+    console.log('Current user:', user?.fullName, user?.email)
 
     const validationErrors = validateForm(formData, selectedAmount, customAmount, 'IN')
 
@@ -114,10 +151,17 @@ const PaymentForm = () => {
         amount: totalAmount,
         tip: tipPercentage,
         anonymous: formData.anonymous,
-        address: formData.address || ''
+        address: formData.address || '',
+        userId: user?.id || null,
+        userFullName: user?.fullName || '',
+        userEmail: user?.email || ''
       }
 
       console.log('Creating order with data:', orderData)
+      console.log('Including authenticated user data in order:', {
+        userId: orderData.userId,
+        authenticatedUser: user?.fullName
+      })
 
       const order = await createOrder(orderData)
       console.log('Order created:', order)
@@ -135,19 +179,46 @@ const PaymentForm = () => {
         order_id: order.id,
         handler: async function (response) {
           console.log('Payment completed:', response)
+          console.log('Payment successful for user:', user?.fullName)
+          
           try {
             const verifyResult = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              userDetails: orderData
+              userDetails: {
+                ...orderData,
+                authenticatedUserId: user?.id,
+                authenticatedUserEmail: user?.email
+              }
             })
 
             if (verifyResult.success) {
-              alert('Payment successful! Thank you for your contribution.')
+              // UPDATED: Instead of showing alert, call the success callback
+              const paymentDetails = {
+                amount: totalAmount,
+                transactionId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                userName: user?.fullName,
+                userEmail: user?.email,
+                timestamp: new Date().toISOString()
+              }
+
+              // Call the onPaymentSuccess prop passed from App.jsx
+              if (props.onPaymentSuccess) {
+                props.onPaymentSuccess(paymentDetails)
+              } else {
+                // Fallback to alert if callback not provided
+                const successMessage = user?.fullName 
+                  ? `Thank you ${user.fullName}! Your payment was successful. Your contribution means a lot!`
+                  : 'Payment successful! Thank you for your contribution.'
+                alert(successMessage)
+              }
+              
+              // Reset form but keep user data if authenticated
               setFormData({
-                name: '',
-                email: '',
+                name: user?.fullName || '',
+                email: user?.email || '',
                 phone: '',
                 address: '',
                 anonymous: false
@@ -156,6 +227,8 @@ const PaymentForm = () => {
               setCustomAmount('')
               setTipPercentage(18)
               setErrors({})
+              
+              console.log('Contribution completed successfully for user:', user?.fullName, 'Amount:', totalAmount)
             } else {
               alert('Payment verification failed. Please contact support.')
             }
@@ -242,6 +315,29 @@ const PaymentForm = () => {
                 <button type="button" className="btn-close" style={{ fontSize: '14px' }}></button>
               </div>
 
+              {user && (
+                <div className="alert alert-info mb-3" style={{ 
+                  backgroundColor: '#e6f7f5', 
+                  borderColor: '#1ba89a',
+                  color: '#0d4c41',
+                  fontSize: '13px',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #1ba89a'
+                }}>
+                  <div className="d-flex align-items-center">
+                    <svg width="16" height="16" fill="#1ba89a" viewBox="0 0 16 16" className="me-2">
+                      <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                    </svg>
+                    <div>
+                      <strong>Logged in as:</strong> {user.fullName}
+                      <br />
+                      <small className="text-muted">{user.email}</small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="text-center mb-4">
                 <h4 className="fw-semibold mb-3" style={{ 
                   fontSize: '18px',
@@ -273,6 +369,8 @@ const PaymentForm = () => {
                 formData={formData}
                 handleInputChange={handleInputChange}
                 errors={errors}
+                user={user}
+                isAuthenticated={!!user}
               />
 
               <div className="text-center mb-3">

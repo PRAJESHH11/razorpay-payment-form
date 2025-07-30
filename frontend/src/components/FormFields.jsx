@@ -1,7 +1,13 @@
 import React, { useState } from 'react'
 
-const FormFields = ({ formData, handleInputChange, errors }) => {
+// ADDED: Accept new props for authentication handling
+const FormFields = ({ formData, handleInputChange, errors, user, isAuthenticated }) => {
   const [selectedCountry, setSelectedCountry] = useState('IN')
+
+  // ADDED: Determine if fields should be readonly based on authentication and anonymous status
+  // When user is authenticated and not anonymous, name and email are pre-filled and readonly
+  const isNameReadonly = isAuthenticated && !formData.anonymous && user
+  const isEmailReadonly = isAuthenticated && !formData.anonymous && user
 
   const countries = [
     { code: 'IN', name: '🇮🇳 India' },
@@ -21,13 +27,22 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
       <div className="mb-3">
         <label className="form-label mb-1" style={{ color: '#dc3545', fontWeight: '600', fontSize: '14px' }}>
           Name *
+          {/* ADDED: Show lock icon when field is readonly */}
+          {isNameReadonly && (
+            <span className="ms-2" title="Pre-filled from your account">
+              <svg width="12" height="12" fill="#28a745" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+              </svg>
+            </span>
+          )}
         </label>
         <div className="position-relative">
           <input
             type="text"
-            className={`form-control pe-5 ${errors.name ? 'is-invalid' : ''}`}
+            className={`form-control pe-5 ${errors.name ? 'is-invalid' : ''} ${isNameReadonly ? 'readonly-field' : ''}`}
             value={formData.name}
             onChange={(e) => handleInputChange('name', e.target.value)}
+            readOnly={isNameReadonly} // ADDED: Make field readonly when user is authenticated
             style={{ 
               border: errors.name ? '1px solid #dc3545' : '1px solid #ddd',
               borderRadius: '4px',
@@ -35,12 +50,15 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
               fontSize: '14px',
               width: '100%',
               color: '#2c3e50',
-              fontWeight: '500'
+              fontWeight: '500',
+              backgroundColor: isNameReadonly ? '#f8f9fa' : 'white', // ADDED: Gray background for readonly
+              cursor: isNameReadonly ? 'not-allowed' : 'text' // ADDED: Change cursor for readonly
             }}
-            placeholder="Enter your full name"
+            placeholder={isNameReadonly ? 'Pre-filled from your account' : 'Enter your full name'}
+            title={isNameReadonly ? 'This field is pre-filled from your logged-in account' : ''} // ADDED: Tooltip for readonly
           />
           <div className="icon-right">
-            <svg width="16" height="16" fill="#dc3545" viewBox="0 0 16 16">
+            <svg width="16" height="16" fill={isNameReadonly ? "#28a745" : "#dc3545"} viewBox="0 0 16 16">
               <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
             </svg>
           </div>
@@ -48,6 +66,15 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
         {errors.name && (
           <div className="error-message">
             {errors.name}
+          </div>
+        )}
+        {/* ADDED: Show helpful text when field is pre-filled */}
+        {isNameReadonly && (
+          <div className="mt-1">
+            <small className="text-success" style={{ fontSize: '12px' }}>
+              <i className="fas fa-check-circle me-1"></i>
+              Pre-filled from your account
+            </small>
           </div>
         )}
         <div className="form-check mt-2">
@@ -59,6 +86,12 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
           />
           <label className="form-check-label" style={{ fontSize: '13px', color: '#2c3e50', fontWeight: '500' }}>
             Make my contribution anonymous
+            {/* ADDED: Show explanation for authenticated users */}
+            {isAuthenticated && (
+              <span className="text-muted ms-1">
+                (will hide your account details)
+              </span>
+            )}
           </label>
         </div>
       </div>
@@ -66,13 +99,22 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
       <div className="mb-3">
         <label className="form-label mb-1" style={{ color: '#dc3545', fontWeight: '600', fontSize: '14px' }}>
           Email ID *
+          {/* ADDED: Show lock icon when field is readonly */}
+          {isEmailReadonly && (
+            <span className="ms-2" title="Pre-filled from your account">
+              <svg width="12" height="12" fill="#28a745" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+              </svg>
+            </span>
+          )}
         </label>
         <div className="position-relative">
           <input
             type="email"
-            className={`form-control pe-5 ${errors.email ? 'is-invalid' : ''}`}
+            className={`form-control pe-5 ${errors.email ? 'is-invalid' : ''} ${isEmailReadonly ? 'readonly-field' : ''}`}
             value={formData.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
+            readOnly={isEmailReadonly} // ADDED: Make field readonly when user is authenticated
             style={{ 
               border: errors.email ? '1px solid #dc3545' : '1px solid #ddd',
               borderRadius: '4px',
@@ -80,12 +122,15 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
               fontSize: '14px',
               width: '100%',
               color: '#2c3e50',
-              fontWeight: '500'
+              fontWeight: '500',
+              backgroundColor: isEmailReadonly ? '#f8f9fa' : 'white', // ADDED: Gray background for readonly
+              cursor: isEmailReadonly ? 'not-allowed' : 'text' // ADDED: Change cursor for readonly
             }}
-            placeholder="Enter your email address"
+            placeholder={isEmailReadonly ? 'Pre-filled from your account' : 'Enter your email address'}
+            title={isEmailReadonly ? 'This field is pre-filled from your logged-in account' : ''} // ADDED: Tooltip for readonly
           />
           <div className="icon-right">
-            <svg width="16" height="16" fill="#dc3545" viewBox="0 0 16 16">
+            <svg width="16" height="16" fill={isEmailReadonly ? "#28a745" : "#dc3545"} viewBox="0 0 16 16">
               <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
             </svg>
           </div>
@@ -93,6 +138,15 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
         {errors.email && (
           <div className="error-message">
             {errors.email}
+          </div>
+        )}
+        {/* ADDED: Show helpful text when field is pre-filled */}
+        {isEmailReadonly && (
+          <div className="mt-1">
+            <small className="text-success" style={{ fontSize: '12px' }}>
+              <i className="fas fa-check-circle me-1"></i>
+              Pre-filled from your account
+            </small>
           </div>
         )}
       </div>
@@ -183,6 +237,34 @@ const FormFields = ({ formData, handleInputChange, errors }) => {
           </div>
         )}
       </div>
+
+      {/* ADDED: Add CSS styles for readonly fields */}
+      <style jsx="true">{`
+        .readonly-field {
+          background-color: #f8f9fa !important;
+          cursor: not-allowed !important;
+          opacity: 0.8;
+        }
+        
+        .readonly-field:focus {
+          box-shadow: none !important;
+          border-color: #ced4da !important;
+        }
+        
+        .icon-right {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
+        }
+        
+        .error-message {
+          color: #dc3545;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+      `}</style>
     </>
   )
 }

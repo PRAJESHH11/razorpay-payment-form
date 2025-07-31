@@ -291,7 +291,7 @@ This project is licensed under the MIT License. Feel free to use, modify, and di
 
 For support or questions:
 - Create an issue in this repository
-- Email: thisisprajesh11gmail.com
+- Email: thisisprajesh11@gmail.com
 
 ---
 
